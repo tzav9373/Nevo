@@ -1,781 +1,638 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>צייד התהודה — מתנד Duffing (2D)</title>
+  <title>תחנה נטושה — סימולציה פיזיקלית דו־מימד</title>
   <style>
     :root { color-scheme: dark; }
-    body{
-      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:#0b0f14; color:#e7edf5;
-    }
-    header{
-      padding:14px 16px; border-bottom:1px solid #1b2736; background:#0d131b;
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-    }
-    header .title{ font-size:16px; font-weight:700; }
-    header .sub{ font-size:12px; opacity:.8; }
-    .wrap{
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap:12px;
-      padding:12px;
-    }
-    @media (max-width: 980px){
-      .wrap{ grid-template-columns: 1fr; }
-    }
-    .panel{
-      border:1px solid #1b2736; background:#0d131b; border-radius:14px;
-      padding:12px;
-    }
-    .panel h2{ margin:0 0 10px; font-size:14px; }
-    .row{ display:grid; grid-template-columns: 1fr 90px; gap:10px; align-items:center; margin:10px 0; }
-    label{ font-size:12px; opacity:.9; }
-    input[type="range"]{ width:100%; }
-    .val{ font-variant-numeric: tabular-nums; text-align:left; font-size:12px; opacity:.9; }
-    .btns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    button{
-      border:1px solid #2a3a50; background:#0f1a26; color:#e7edf5;
-      padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600;
-    }
-    button:hover{ background:#122235; }
-    button:active{ transform: translateY(1px); }
-    .tog{
-      display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; opacity:.95;
-    }
-    .tog input{ transform: scale(1.1); }
-    .note{
-      margin-top:10px; font-size:12px; opacity:.75; line-height:1.45;
-      border-top:1px dashed #23344a; padding-top:10px;
-    }
-
-    .canvases{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto;
-      gap:12px;
-    }
-    @media (max-width: 980px){
-      .canvases{ grid-template-columns: 1fr; }
-    }
-    .card{
-      border:1px solid #1b2736; background:#0d131b; border-radius:14px; overflow:hidden;
-    }
-    .card .bar{
-      padding:10px 12px; border-bottom:1px solid #1b2736; display:flex; align-items:center;
-      justify-content:space-between; gap:10px;
-    }
-    .card .bar .name{ font-size:13px; font-weight:700; }
-    .card .bar .meta{ font-size:12px; opacity:.75; font-variant-numeric: tabular-nums; }
-    canvas{ display:block; width:100%; height:260px; background:#0b0f14; }
-    .big canvas{ height:360px; }
+    body { margin: 0; font-family: Arial, sans-serif; direction: rtl; background:#0b0f14; color:#e8edf2; }
+    header { padding: 12px 14px; border-bottom: 1px solid #1c2633; background:#0d131b; position: sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size: 18px; }
+    .wrap { display:flex; gap:12px; padding:12px; }
+    .panel { width: 360px; min-width: 320px; background:#0d131b; border:1px solid #1c2633; border-radius: 12px; padding:12px; }
+    .row { display:flex; align-items:center; gap:10px; margin:8px 0; }
+    .row label { flex:1; font-size: 13px; opacity:0.9; }
+    .row input[type="range"] { flex:1.2; }
+    .row .val { width:72px; text-align:left; font-variant-numeric: tabular-nums; opacity:0.9; }
+    button { cursor:pointer; border:1px solid #263449; background:#101a26; color:#e8edf2; padding:8px 10px; border-radius:10px; }
+    button:hover { background:#122033; }
+    .btns { display:flex; gap:10px; flex-wrap: wrap; }
+    canvas { flex:1; background: radial-gradient(1200px 500px at 30% 30%, #0f1825 0%, #070a0e 60%, #050608 100%); border:1px solid #1c2633; border-radius: 12px; }
+    .hint { font-size: 12px; opacity: 0.8; line-height: 1.35; margin-top: 10px;}
+    .log { margin-top: 10px; padding:10px; border:1px solid #1c2633; border-radius: 10px; background:#0a1017; font-size:12px; height:120px; overflow:auto; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #263449; border-radius: 999px; font-size:12px; opacity:0.9; }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <div class="title">צייד התהודה — מתנד Duffing מאולץ ומרוסן (2D)</div>
-      <div class="sub">משוואה:  x¨ + 2γ x˙ + ω₀² x + β x³ = F cos(ω t)  · אינטגרציה: RK4</div>
-    </div>
-    <div class="sub">טיפ: הפעל/י β ≠ 0 ואז בצע/י Sweep מעלה ומטה כדי לראות היסטרזיס</div>
-  </header>
+<header>
+  <h1>🛰️ התחנה הנטושה — סימולציה פיזיקלית (2D)</h1>
+</header>
 
-  <div class="wrap">
-    <div class="panel">
-      <h2>פרמטרים</h2>
-
-      <div class="row">
-        <label for="w0">תדירות טבעית ω₀</label>
-        <div class="val" id="w0Val"></div>
-        <input id="w0" type="range" min="0.2" max="3.0" step="0.01" value="1.0" />
-      </div>
-
-      <div class="row">
-        <label for="gamma">ריסון γ</label>
-        <div class="val" id="gammaVal"></div>
-        <input id="gamma" type="range" min="0.000" max="0.500" step="0.001" value="0.040" />
-      </div>
-
-      <div class="row">
-        <label for="F">אמפליטודת הנעה F</label>
-        <div class="val" id="FVal"></div>
-        <input id="F" type="range" min="0.00" max="2.00" step="0.01" value="0.40" />
-      </div>
-
-      <div class="row">
-        <label for="omega">תדירות הנעה ω</label>
-        <div class="val" id="omegaVal"></div>
-        <input id="omega" type="range" min="0.05" max="3.50" step="0.001" value="1.05" />
-      </div>
-
-      <div class="row">
-        <label for="beta">אי־ליניאריות β (Duffing)</label>
-        <div class="val" id="betaVal"></div>
-        <input id="beta" type="range" min="-2.0" max="2.0" step="0.01" value="0.80" />
-      </div>
-
-      <div class="row">
-        <label for="dt">צעד זמן dt</label>
-        <div class="val" id="dtVal"></div>
-        <input id="dt" type="range" min="0.001" max="0.030" step="0.001" value="0.010" />
-      </div>
-
-      <div class="row">
-        <label for="x0">תנאי התחלה x(0)</label>
-        <div class="val" id="x0Val"></div>
-        <input id="x0" type="range" min="-2.0" max="2.0" step="0.01" value="0.10" />
-      </div>
-
-      <div class="row">
-        <label for="v0">תנאי התחלה x˙(0)</label>
-        <div class="val" id="v0Val"></div>
-        <input id="v0" type="range" min="-2.0" max="2.0" step="0.01" value="0.00" />
-      </div>
-
-      <div class="tog">
-        <input id="showVectors" type="checkbox" checked />
-        <label for="showVectors">הראה וקטורים (v, a)</label>
-      </div>
-
-      <div class="tog">
-        <input id="pause" type="checkbox" />
-        <label for="pause">השהיה</label>
-      </div>
-
-      <div class="btns">
-        <button id="reset">איפוס מצב</button>
-        <button id="clearPlots">נקה גרפים</button>
-        <button id="sweepUp">Sweep ↑</button>
-        <button id="sweepDown">Sweep ↓</button>
-      </div>
-
-      <div class="note">
-        <div><b>איך לראות “קפיצה” והיסטרזיס:</b></div>
-        <div>קבע/י לדוגמה: ω₀≈1, γ≈0.04, F≈0.4–0.8, β≈+0.6 עד +1.2. ואז לחץ/י Sweep ↑ ואחריו Sweep ↓.</div>
-        <div style="margin-top:6px;">העקומה אמפליטודה–תדר נבנית תוך כדי סריקה (כוללת "זיכרון" ולכן תראה/י הבדל בעלייה מול ירידה).</div>
-      </div>
+<div class="wrap">
+  <div class="panel">
+    <div class="row"><span class="pill">סיפור</span></div>
+    <div class="hint">
+      אתם מגיעים לתחנת מחקר נטושה. מודולים מחוברים במחברים. לחץ אוויר דולף → נוצר דחף → התחנה מסתחררת,
+      עומסים גדלים → מחברים נשברים. אין “סקריפט”: הסיפור יוצא מהפיזיקה.
     </div>
 
-    <div class="canvases">
-      <div class="card big" style="grid-column: 1 / -1;">
-        <div class="bar">
-          <div class="name">מערכת (קפיץ–מסה) + x(t)</div>
-          <div class="meta" id="metaLive"></div>
-        </div>
-        <canvas id="simCanvas"></canvas>
-      </div>
+    <hr style="border:none;border-top:1px solid #1c2633;margin:12px 0;">
 
-      <div class="card">
-        <div class="bar">
-          <div class="name">מרחב פאזות (x מול x˙)</div>
-          <div class="meta" id="metaPhase"></div>
-        </div>
-        <canvas id="phaseCanvas"></canvas>
-      </div>
-
-      <div class="card">
-        <div class="bar">
-          <div class="name">עקומת תגובה (אמפליטודה מול ω)</div>
-          <div class="meta" id="metaResp"></div>
-        </div>
-        <canvas id="respCanvas"></canvas>
-      </div>
+    <div class="row">
+      <label>קשיחות מחברים</label>
+      <input id="stiffness" type="range" min="50" max="900" value="320">
+      <div class="val" id="stiffnessVal"></div>
     </div>
+
+    <div class="row">
+      <label>ריסון (דאמפינג)</label>
+      <input id="damping" type="range" min="0" max="12" value="5" step="0.1">
+      <div class="val" id="dampingVal"></div>
+    </div>
+
+    <div class="row">
+      <label>חוזק לפני שבירה</label>
+      <input id="breakF" type="range" min="80" max="900" value="420">
+      <div class="val" id="breakFVal"></div>
+    </div>
+
+    <div class="row">
+      <label>עוצמת דליפה → דחף</label>
+      <input id="leakPower" type="range" min="0" max="18" value="8" step="0.1">
+      <div class="val" id="leakPowerVal"></div>
+    </div>
+
+    <div class="row">
+      <label>גרר חלל (מלאכותי)</label>
+      <input id="spaceDrag" type="range" min="0" max="0.08" value="0.015" step="0.001">
+      <div class="val" id="spaceDragVal"></div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #1c2633;margin:12px 0;">
+
+    <div class="btns">
+      <button id="addBreach">🕳️ צור דליפה במודול נבחר</button>
+      <button id="toggleHatch">🚪 פתח/סגור צוהר בין מודולים</button>
+      <button id="repair">🔧 תקן מחברים (החזיר שבורים)</button>
+      <button id="reset">↩️ איפוס תרחיש</button>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">
+      <b>שליטה:</b><br>
+      • קליק על מודול = לבחור.<br>
+      • גרירה עם עכבר = להזיז (כוח חיצוני).<br>
+      • “צוהר” פתוח מאפשר מעבר לחץ בין מודולים מחוברים.<br>
+      • דליפה מורידה לחץ ויוצרת דחף הפוך לכיוון החור.
+    </div>
+
+    <div class="log" id="log"></div>
   </div>
+
+  <canvas id="c" width="1100" height="720"></canvas>
+</div>
 
 <script>
 (() => {
-  // ---------- Utilities ----------
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const lerp = (a,b,t) => a + (b-a)*t;
+  // ===== Utilities =====
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const rand = (a,b)=>a + Math.random()*(b-a);
 
-  function setupHiDPICanvas(canvas) {
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.floor(rect.width * dpr);
-    canvas.height = Math.floor(rect.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return ctx;
+  const logEl = document.getElementById('log');
+  function log(msg){
+    const t = new Date().toLocaleTimeString('he-IL');
+    logEl.innerHTML = `<div>⏱️ ${t} — ${msg}</div>` + logEl.innerHTML;
   }
 
-  function drawAxes(ctx, w, h, opts={}) {
-    const { midX=w/2, midY=h/2, alpha=0.35 } = opts;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#2a3a50';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, midY); ctx.lineTo(w, midY);
-    ctx.moveTo(midX, 0); ctx.lineTo(midX, h);
-    ctx.stroke();
-    ctx.restore();
+  // ===== Canvas =====
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  // World bounds (simple "camera" space)
+  const W = canvas.width, H = canvas.height;
+
+  // ===== UI =====
+  const ui = {
+    stiffness: document.getElementById('stiffness'),
+    damping: document.getElementById('damping'),
+    breakF: document.getElementById('breakF'),
+    leakPower: document.getElementById('leakPower'),
+    spaceDrag: document.getElementById('spaceDrag'),
+    stiffnessVal: document.getElementById('stiffnessVal'),
+    dampingVal: document.getElementById('dampingVal'),
+    breakFVal: document.getElementById('breakFVal'),
+    leakPowerVal: document.getElementById('leakPowerVal'),
+    spaceDragVal: document.getElementById('spaceDragVal'),
+  };
+
+  function refreshVals(){
+    ui.stiffnessVal.textContent = (+ui.stiffness.value).toFixed(0);
+    ui.dampingVal.textContent = (+ui.damping.value).toFixed(1);
+    ui.breakFVal.textContent = (+ui.breakF.value).toFixed(0);
+    ui.leakPowerVal.textContent = (+ui.leakPower.value).toFixed(1);
+    ui.spaceDragVal.textContent = (+ui.spaceDrag.value).toFixed(3);
+  }
+  ['input','change'].forEach(ev=>{
+    ui.stiffness.addEventListener(ev, refreshVals);
+    ui.damping.addEventListener(ev, refreshVals);
+    ui.breakF.addEventListener(ev, refreshVals);
+    ui.leakPower.addEventListener(ev, refreshVals);
+    ui.spaceDrag.addEventListener(ev, refreshVals);
+  });
+  refreshVals();
+
+  // ===== Physics Model =====
+  // Rigid body in 2D (rectangle) with translation + rotation.
+  class Body {
+    constructor({x,y,w,h,mass=1,angle=0}){
+      this.x=x; this.y=y;
+      this.vx=0; this.vy=0;
+      this.angle=angle;
+      this.omega=0;
+      this.w=w; this.h=h;
+      this.mass = mass;
+      this.invMass = 1/mass;
+
+      // Rectangle inertia: I = m*(w^2 + h^2)/12
+      this.inertia = mass*(w*w + h*h)/12;
+      this.invInertia = 1/this.inertia;
+
+      // Forces accumulator
+      this.fx=0; this.fy=0; this.tau=0;
+
+      // "Story" state
+      this.pressure = 1.0; // 0..1 (relative)
+      this.breach = null; // {localX, localY, dirX, dirY}
+      this.name = '';
+    }
+
+    applyForce(fx, fy, px=this.x, py=this.y){
+      // Force at world point (px,py): adds torque
+      this.fx += fx; this.fy += fy;
+      const rx = px - this.x;
+      const ry = py - this.y;
+      this.tau += rx*fy - ry*fx;
+    }
+
+    integrate(dt, linearDrag){
+      // Semi-implicit Euler for stability:
+      // v += a*dt, x += v*dt
+      const ax = this.fx*this.invMass;
+      const ay = this.fy*this.invMass;
+      this.vx += ax*dt;
+      this.vy += ay*dt;
+
+      // Simple space drag to avoid endless drifting (user-controlled)
+      this.vx *= (1 - linearDrag);
+      this.vy *= (1 - linearDrag);
+
+      this.x += this.vx*dt;
+      this.y += this.vy*dt;
+
+      const alpha = this.tau*this.invInertia;
+      this.omega += alpha*dt;
+      this.omega *= (1 - linearDrag*0.8);
+      this.angle += this.omega*dt;
+
+      // clear accumulators
+      this.fx=0; this.fy=0; this.tau=0;
+    }
+
+    // Convert local point to world point
+    localToWorld(lx, ly){
+      const c = Math.cos(this.angle), s = Math.sin(this.angle);
+      return {
+        x: this.x + c*lx - s*ly,
+        y: this.y + s*lx + c*ly
+      };
+    }
+
+    // Convert world point to local point
+    worldToLocal(wx, wy){
+      const c = Math.cos(this.angle), s = Math.sin(this.angle);
+      const dx = wx - this.x, dy = wy - this.y;
+      return {
+        x:  c*dx + s*dy,
+        y: -s*dx + c*dy
+      };
+    }
+
+    containsPoint(wx, wy){
+      const p = this.worldToLocal(wx, wy);
+      return Math.abs(p.x) <= this.w/2 && Math.abs(p.y) <= this.h/2;
+    }
   }
 
-  function format(n, digits=3) {
-    return Number(n).toFixed(digits);
-  }
+  // Spring-like connector between two bodies at two local anchor points
+  class Connector {
+    constructor(a, b, aLocal, bLocal){
+      this.a=a; this.b=b;
+      this.aLocal=aLocal; this.bLocal=bLocal;
+      const wa = a.localToWorld(aLocal.x, aLocal.y);
+      const wb = b.localToWorld(bLocal.x, bLocal.y);
+      const dx = wb.x - wa.x, dy = wb.y - wa.y;
+      this.restLen = Math.hypot(dx,dy);
+      this.broken = false;
 
-  // ---------- Model: Duffing oscillator ----------
-  // State: x, v
-  // x' = v
-  // v' = -2γ v - ω0^2 x - β x^3 + F cos(ω t)
-  function deriv(t, x, v, p) {
-    const a = -2*p.gamma*v - (p.w0*p.w0)*x - p.beta*(x*x*x) + p.F*Math.cos(p.omega*t);
-    return { dx: v, dv: a };
-  }
+      // Hatch: if open, pressures equalize slowly
+      this.hatchOpen = true;
+    }
 
-  // RK4 step
-  function stepRK4(t, x, v, dt, p) {
-    const k1 = deriv(t, x, v, p);
-    const k2 = deriv(t + dt/2, x + k1.dx*dt/2, v + k1.dv*dt/2, p);
-    const k3 = deriv(t + dt/2, x + k2.dx*dt/2, v + k2.dv*dt/2, p);
-    const k4 = deriv(t + dt,   x + k3.dx*dt,   v + k3.dv*dt,   p);
+    repair(){
+      this.broken = false;
+    }
 
-    const xn = x + (dt/6)*(k1.dx + 2*k2.dx + 2*k3.dx + k4.dx);
-    const vn = v + (dt/6)*(k1.dv + 2*k2.dv + 2*k3.dv + k4.dv);
-    return { x: xn, v: vn, a: k4.dv };
-  }
+    step(dt, stiffness, damping, breakF){
+      if (this.broken) return;
 
-  // Estimate amplitude over recent window by tracking max|x|
-  function amplitudeEstimator(windowN=1500) {
-    const buf = new Array(windowN).fill(0);
-    let i = 0, filled = false;
+      const wa = this.a.localToWorld(this.aLocal.x, this.aLocal.y);
+      const wb = this.b.localToWorld(this.bLocal.x, this.bLocal.y);
 
-    return {
-      push(x) {
-        buf[i++] = Math.abs(x);
-        if (i >= windowN) { i = 0; filled = true; }
-      },
-      value() {
-        const n = filled ? windowN : i;
-        if (n <= 0) return 0;
-        let m = 0;
-        for (let k = 0; k < n; k++) m = Math.max(m, buf[k]);
-        return m;
-      },
-      clear() {
-        i = 0; filled = false;
-        buf.fill(0);
+      const dx = wb.x - wa.x, dy = wb.y - wa.y;
+      const dist = Math.max(1e-6, Math.hypot(dx,dy));
+      const nx = dx/dist, ny = dy/dist;
+
+      // Relative velocity of anchor points (approx by body velocities)
+      const rvx = (this.b.vx - this.a.vx);
+      const rvy = (this.b.vy - this.a.vy);
+      const relAlong = rvx*nx + rvy*ny;
+
+      const x = dist - this.restLen;
+      // Spring force: F = -k*x - c*v
+      const F = -stiffness*x - damping*relAlong;
+
+      // Break check
+      if (Math.abs(F) > breakF){
+        this.broken = true;
+        log(`💥 מחבר נשבר בין ${this.a.name} ↔ ${this.b.name} (עומס=${Math.abs(F).toFixed(0)})`);
+        return;
       }
-    };
+
+      // Apply equal and opposite forces at anchor points
+      const fx = F*nx, fy = F*ny;
+      this.a.applyForce( fx,  fy, wa.x, wa.y);
+      this.b.applyForce(-fx, -fy, wb.x, wb.y);
+
+      // Pressure equalization if hatch open
+      if (this.hatchOpen){
+        // Flow proportional to pressure difference
+        const diff = this.a.pressure - this.b.pressure;
+        const flow = diff * 0.35 * dt; // tuned
+        this.a.pressure -= flow;
+        this.b.pressure += flow;
+        this.a.pressure = clamp(this.a.pressure, 0, 1);
+        this.b.pressure = clamp(this.b.pressure, 0, 1);
+      }
+    }
   }
 
-  // ---------- UI elements ----------
-  const els = {
-    w0: document.getElementById('w0'),
-    gamma: document.getElementById('gamma'),
-    F: document.getElementById('F'),
-    omega: document.getElementById('omega'),
-    beta: document.getElementById('beta'),
-    dt: document.getElementById('dt'),
-    x0: document.getElementById('x0'),
-    v0: document.getElementById('v0'),
-    w0Val: document.getElementById('w0Val'),
-    gammaVal: document.getElementById('gammaVal'),
-    FVal: document.getElementById('FVal'),
-    omegaVal: document.getElementById('omegaVal'),
-    betaVal: document.getElementById('betaVal'),
-    dtVal: document.getElementById('dtVal'),
-    x0Val: document.getElementById('x0Val'),
-    v0Val: document.getElementById('v0Val'),
-    showVectors: document.getElementById('showVectors'),
-    pause: document.getElementById('pause'),
-    reset: document.getElementById('reset'),
-    clearPlots: document.getElementById('clearPlots'),
-    sweepUp: document.getElementById('sweepUp'),
-    sweepDown: document.getElementById('sweepDown'),
-    metaLive: document.getElementById('metaLive'),
-    metaPhase: document.getElementById('metaPhase'),
-    metaResp: document.getElementById('metaResp'),
-    simCanvas: document.getElementById('simCanvas'),
-    phaseCanvas: document.getElementById('phaseCanvas'),
-    respCanvas: document.getElementById('respCanvas'),
-  };
+  // ===== Scenario =====
+  let bodies = [];
+  let connectors = [];
+  let selectedBody = null;
 
-  const params = {
-    w0: parseFloat(els.w0.value),
-    gamma: parseFloat(els.gamma.value),
-    F: parseFloat(els.F.value),
-    omega: parseFloat(els.omega.value),
-    beta: parseFloat(els.beta.value),
-    dt: parseFloat(els.dt.value),
-  };
+  function makeScenario(){
+    bodies = [];
+    connectors = [];
 
-  function syncLabels() {
-    els.w0Val.textContent = format(params.w0, 2);
-    els.gammaVal.textContent = format(params.gamma, 3);
-    els.FVal.textContent = format(params.F, 2);
-    els.omegaVal.textContent = format(params.omega, 3);
-    els.betaVal.textContent = format(params.beta, 2);
-    els.dtVal.textContent = format(params.dt, 3);
-    els.x0Val.textContent = format(parseFloat(els.x0.value), 2);
-    els.v0Val.textContent = format(parseFloat(els.v0.value), 2);
-  }
+    // Create 4 modules (like a small station)
+    const core = new Body({x: W*0.52, y:H*0.52, w:170, h:110, mass: 9});
+    core.name = 'ליבה';
+    core.pressure = 1.0;
 
-  // Bind sliders
-  function bindParamSlider(inputEl, key, digits) {
-    inputEl.addEventListener('input', () => {
-      params[key] = parseFloat(inputEl.value);
-      syncLabels();
+    const lab = new Body({x: W*0.72, y:H*0.50, w:150, h:95, mass: 7, angle: 0.02});
+    lab.name = 'מעבדה';
+    lab.pressure = 0.95;
+
+    const hab = new Body({x: W*0.50, y:H*0.30, w:160, h:100, mass: 8, angle: -0.03});
+    hab.name = 'מגורים';
+    hab.pressure = 0.88;
+
+    const cargo = new Body({x: W*0.34, y:H*0.54, w:145, h:95, mass: 6, angle: 0.01});
+    cargo.name = 'מטען';
+    cargo.pressure = 0.92;
+
+    bodies.push(core, lab, hab, cargo);
+
+    // Small initial drift to make it feel like "space"
+    bodies.forEach(b=>{
+      b.vx = rand(-18, 18);
+      b.vy = rand(-14, 14);
+      b.omega = rand(-0.15, 0.15);
     });
-  }
-  bindParamSlider(els.w0, 'w0');
-  bindParamSlider(els.gamma, 'gamma');
-  bindParamSlider(els.F, 'F');
-  bindParamSlider(els.omega, 'omega');
-  bindParamSlider(els.beta, 'beta');
-  bindParamSlider(els.dt, 'dt');
 
-  syncLabels();
+    // Connectors (anchors near edges)
+    connectors.push(new Connector(core, lab,   {x: core.w/2, y:  0}, {x:-lab.w/2, y:  0}));
+    connectors.push(new Connector(core, hab,   {x: 0, y:-core.h/2}, {x: 0, y: hab.h/2}));
+    connectors.push(new Connector(core, cargo, {x:-core.w/2, y: 0}, {x: cargo.w/2, y: 0}));
 
-  // ---------- Simulation state ----------
-  let t = 0;
-  let x = parseFloat(els.x0.value);
-  let v = parseFloat(els.v0.value);
-  let a = 0;
+    // A secondary brace to make structure interesting
+    connectors.push(new Connector(hab, lab, {x: hab.w/2, y: 15}, {x: -lab.w/2, y: -15}));
 
-  const amp = amplitudeEstimator(1800);
-
-  // Plot buffers
-  const xtBuf = []; // recent (t,x)
-  const maxXT = 1400; // samples
-  const phBuf = []; // recent (x,v)
-  const maxPH = 1400;
-
-  // Response curve points: (omega, amplitude)
-  const respPoints = [];
-  let sweep = null; // {dir: +1/-1, wStart, wEnd, wStep, holdTime, holdLeft}
-
-  function resetState() {
-    t = 0;
-    x = parseFloat(els.x0.value);
-    v = parseFloat(els.v0.value);
-    a = 0;
-    amp.clear();
-    xtBuf.length = 0;
-    phBuf.length = 0;
+    // Story: one connector hatch is stuck closed
+    connectors[3].hatchOpen = false;
+    log('📡 קלטתם אות מצוקה ישן. הצוהר בין מגורים↔מעבדה תקוע סגור (אין איזון לחץ דרכו).');
+    selectedBody = core;
   }
 
-  function clearPlots() {
-    xtBuf.length = 0;
-    phBuf.length = 0;
-    respPoints.length = 0;
-    amp.clear();
-  }
+  makeScenario();
 
-  els.reset.addEventListener('click', () => { resetState(); });
-  els.clearPlots.addEventListener('click', () => { clearPlots(); });
+  // ===== Interaction =====
+  const mouse = {x:0,y:0, down:false, dragging:false, dragOffsetX:0, dragOffsetY:0};
+  let dragBody = null;
 
-  // Sweeps: change omega slowly and record amplitude after settling
-  function startSweep(dir) {
-    // Keep it simple: scan omega across a range around w0
-    const w0 = params.w0;
-    const wMin = 0.2;
-    const wMax = 3.2;
-    const start = dir > 0 ? wMin : wMax;
-    const end   = dir > 0 ? wMax : wMin;
+  canvas.addEventListener('mousemove', (e)=>{
+    const r = canvas.getBoundingClientRect();
+    mouse.x = (e.clientX - r.left) * (canvas.width / r.width);
+    mouse.y = (e.clientY - r.top)  * (canvas.height / r.height);
+  });
 
-    sweep = {
-      dir,
-      w: start,
-      wEnd: end,
-      wStep: 0.01 * dir,
-      // holdTime: how long to let system settle at each omega (seconds)
-      holdTime: 1.6,
-      holdLeft: 1.6,
-      // discardTime: initial transient per omega (seconds)
-      discardTime: 0.8,
-      discardLeft: 0.8
-    };
+  canvas.addEventListener('mousedown', ()=>{
+    mouse.down = true;
+    dragBody = null;
 
-    // Set omega slider to start
-    params.omega = sweep.w;
-    els.omega.value = String(sweep.w);
-    syncLabels();
-  }
-
-  els.sweepUp.addEventListener('click', () => startSweep(+1));
-  els.sweepDown.addEventListener('click', () => startSweep(-1));
-
-  // ---------- Drawing ----------
-  let ctxSim, ctxPh, ctxResp;
-
-  function resizeAll() {
-    ctxSim = setupHiDPICanvas(els.simCanvas);
-    ctxPh = setupHiDPICanvas(els.phaseCanvas);
-    ctxResp = setupHiDPICanvas(els.respCanvas);
-  }
-  window.addEventListener('resize', resizeAll);
-  resizeAll();
-
-  function drawSim() {
-    const canvas = els.simCanvas;
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    const ctx = ctxSim;
-
-    // Clear
-    ctx.clearRect(0,0,w,h);
-
-    // Layout split: top ~ 55% for mass-spring, bottom for x(t)
-    const topH = h * 0.55;
-    const bottomY = topH;
-
-    // Background separators
-    ctx.strokeStyle = '#1b2736';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, bottomY);
-    ctx.lineTo(w, bottomY);
-    ctx.stroke();
-
-    // ---- Mass-Spring drawing (2D but simple)
-    const midY = topH * 0.55;
-    const leftX = w*0.12;
-    const rightX = w*0.88;
-
-    // Map x to screen displacement
-    const scale = Math.min(w, topH) * 0.18;
-    const xClamped = clamp(x, -3.5, 3.5);
-    const massX = lerp(leftX + 60, rightX - 60, (xClamped + 3.5) / 7.0);
-
-    // Wall
-    ctx.strokeStyle = '#2a3a50';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(leftX, midY - 45);
-    ctx.lineTo(leftX, midY + 45);
-    ctx.stroke();
-
-    // Spring
-    ctx.strokeStyle = '#8aa0b8';
-    ctx.lineWidth = 2;
-    const coils = 14;
-    const ampY = 14;
-    const springStartX = leftX;
-    const springEndX = massX - 30;
-    const springLen = springEndX - springStartX;
-    ctx.beginPath();
-    ctx.moveTo(springStartX, midY);
-    for (let i=1;i<=coils;i++){
-      const px = springStartX + (springLen)*(i/coils);
-      const py = midY + (i%2===0 ? -ampY : ampY);
-      ctx.lineTo(px, py);
-    }
-    ctx.lineTo(springEndX, midY);
-    ctx.stroke();
-
-    // Mass
-    ctx.fillStyle = '#e7edf5';
-    ctx.strokeStyle = '#c9d5e3';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(massX - 30, midY - 22, 60, 44, 10);
-    ctx.fill();
-    ctx.stroke();
-
-    // Center marker (equilibrium)
-    const eqX = lerp(leftX + 60, rightX - 60, 0.5);
-    ctx.strokeStyle = '#2a3a50';
-    ctx.setLineDash([6,6]);
-    ctx.beginPath();
-    ctx.moveTo(eqX, midY - 58);
-    ctx.lineTo(eqX, midY + 58);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Vectors v and a
-    if (els.showVectors.checked) {
-      const vx = clamp(v, -3, 3);
-      const ax = clamp(a, -6, 6);
-      const vLen = vx * 22;
-      const aLen = ax * 10;
-
-      // v arrow (top)
-      ctx.strokeStyle = '#7dd3fc';
-      ctx.lineWidth = 2;
-      arrow(ctx, massX, midY - 42, massX + vLen, midY - 42);
-      ctx.fillStyle = '#7dd3fc';
-      ctx.font = '12px system-ui';
-      ctx.fillText('v', massX + vLen + 6, midY - 38);
-
-      // a arrow
-      ctx.strokeStyle = '#fda4af';
-      ctx.lineWidth = 2;
-      arrow(ctx, massX, midY + 42, massX + aLen, midY + 42);
-      ctx.fillStyle = '#fda4af';
-      ctx.fillText('a', massX + aLen + 6, midY + 46);
-    }
-
-    // Live meta
-    els.metaLive.textContent =
-      `t=${format(t,2)}  |  x=${format(x,3)}  |  x˙=${format(v,3)}  |  A≈${format(amp.value(),3)}  |  ω=${format(params.omega,3)}`;
-
-    // ---- x(t) plot (bottom)
-    const plotX0 = 20, plotY0 = bottomY + 10;
-    const plotW = w - 40, plotH = h - bottomY - 20;
-
-    // Axes
-    drawAxes(ctx, w, h, { midX: w/2, midY: bottomY + plotH/2 + 10, alpha: 0.25 });
-
-    // Frame
-    ctx.strokeStyle = '#1b2736';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(plotX0, plotY0, plotW, plotH);
-
-    // Plot data
-    if (xtBuf.length > 2) {
-      // Normalize by dynamic scale from recent max
-      let maxAbs = 0.6;
-      for (let i=0;i<xtBuf.length;i++) maxAbs = Math.max(maxAbs, Math.abs(xtBuf[i].x));
-      maxAbs = Math.min(5.0, maxAbs);
-
-      ctx.strokeStyle = '#e7edf5';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-
-      const n = xtBuf.length;
-      for (let i=0;i<n;i++){
-        const u = i/(n-1);
-        const px = plotX0 + u*plotW;
-        const py = plotY0 + plotH/2 - (xtBuf[i].x/maxAbs)*(plotH*0.45);
-        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-
-      // label scale
-      ctx.fillStyle = '#a9bbcf';
-      ctx.font = '12px system-ui';
-      ctx.fillText(`x(t)  (סקאלה ±${format(maxAbs,2)})`, plotX0+8, plotY0+16);
-    }
-  }
-
-  function arrow(ctx, x1,y1,x2,y2) {
-    const head = 8;
-    const ang = Math.atan2(y2-y1, x2-x1);
-    ctx.beginPath();
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x2,y2);
-    ctx.lineTo(x2 - head*Math.cos(ang - Math.PI/7), y2 - head*Math.sin(ang - Math.PI/7));
-    ctx.lineTo(x2 - head*Math.cos(ang + Math.PI/7), y2 - head*Math.sin(ang + Math.PI/7));
-    ctx.closePath();
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.fill();
-  }
-
-  function drawPhase() {
-    const canvas = els.phaseCanvas;
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    const ctx = ctxPh;
-    ctx.clearRect(0,0,w,h);
-
-    // Frame + axes
-    ctx.strokeStyle = '#1b2736';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(10,10,w-20,h-20);
-    drawAxes(ctx, w, h, { midX: w/2, midY: h/2, alpha: 0.25 });
-
-    // Determine scale from buffer
-    let sx = 1, sv = 1;
-    for (const p of phBuf) { sx = Math.max(sx, Math.abs(p.x)); sv = Math.max(sv, Math.abs(p.v)); }
-    sx = Math.min(5, sx); sv = Math.min(6, sv);
-
-    // Plot trajectory
-    if (phBuf.length > 2) {
-      ctx.strokeStyle = '#7dd3fc';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      for (let i=0;i<phBuf.length;i++){
-        const px = w/2 + (phBuf[i].x/sx)*(w*0.42);
-        const py = h/2 - (phBuf[i].v/sv)*(h*0.42);
-        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-    }
-
-    // Current point
-    const cx = w/2 + (x/sx)*(w*0.42);
-    const cy = h/2 - (v/sv)*(h*0.42);
-    ctx.fillStyle = '#e7edf5';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 3.5, 0, Math.PI*2);
-    ctx.fill();
-
-    els.metaPhase.textContent = `סקאלה: x±${format(sx,2)},  v±${format(sv,2)}`;
-  }
-
-  function drawResponse() {
-    const canvas = els.respCanvas;
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    const ctx = ctxResp;
-    ctx.clearRect(0,0,w,h);
-
-    // Plot area
-    const pad = 14;
-    const x0 = pad, y0 = pad, pw = w - 2*pad, ph = h - 2*pad;
-
-    ctx.strokeStyle = '#1b2736';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x0,y0,pw,ph);
-
-    // Axes at bottom-left
-    ctx.save();
-    ctx.globalAlpha = 0.25;
-    ctx.strokeStyle = '#2a3a50';
-    ctx.beginPath();
-    ctx.moveTo(x0, y0+ph); ctx.lineTo(x0+pw, y0+ph);
-    ctx.moveTo(x0, y0);    ctx.lineTo(x0, y0+ph);
-    ctx.stroke();
-    ctx.restore();
-
-    // Determine bounds
-    let wMin = 0.2, wMax = 3.2, aMax = 1.0;
-    for (const p of respPoints) aMax = Math.max(aMax, p.A);
-    aMax = Math.min(6.0, aMax);
-
-    // Draw points/line
-    if (respPoints.length > 1) {
-      ctx.strokeStyle = '#fef08a';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      for (let i=0;i<respPoints.length;i++){
-        const u = (respPoints[i].w - wMin)/(wMax - wMin);
-        const vA = respPoints[i].A / aMax;
-        const px = x0 + clamp(u,0,1)*pw;
-        const py = y0 + ph - clamp(vA,0,1)*ph;
-        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-
-      // dots
-      ctx.fillStyle = '#fef08a';
-      for (let i=0;i<respPoints.length;i+=Math.ceil(respPoints.length/120)){
-        const u = (respPoints[i].w - wMin)/(wMax - wMin);
-        const vA = respPoints[i].A / aMax;
-        const px = x0 + clamp(u,0,1)*pw;
-        const py = y0 + ph - clamp(vA,0,1)*ph;
-        ctx.beginPath();
-        ctx.arc(px,py,2.1,0,Math.PI*2);
-        ctx.fill();
+    // Pick topmost body
+    for (let i=bodies.length-1; i>=0; i--){
+      if (bodies[i].containsPoint(mouse.x, mouse.y)){
+        selectedBody = bodies[i];
+        dragBody = bodies[i];
+        mouse.dragging = true;
+        const local = dragBody.worldToLocal(mouse.x, mouse.y);
+        mouse.dragOffsetX = local.x;
+        mouse.dragOffsetY = local.y;
+        log(`🎯 נבחר מודול: ${selectedBody.name}`);
+        break;
       }
     }
+  });
 
-    // Current omega marker
-    const uNow = (params.omega - wMin)/(wMax - wMin);
-    const mx = x0 + clamp(uNow,0,1)*pw;
-    ctx.strokeStyle = '#e7edf5';
-    ctx.globalAlpha = 0.4;
-    ctx.beginPath();
-    ctx.moveTo(mx, y0);
-    ctx.lineTo(mx, y0+ph);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+  window.addEventListener('mouseup', ()=>{
+    mouse.down = false;
+    mouse.dragging = false;
+    dragBody = null;
+  });
 
-    ctx.fillStyle = '#a9bbcf';
-    ctx.font = '12px system-ui';
-    ctx.fillText(`אמפליטודה A (סקאלה עד ${format(aMax,2)})`, x0+6, y0+16);
-    ctx.fillText(`ω (0.2 → 3.2)`, x0+6, y0+ph-6);
+  // ===== Buttons =====
+  document.getElementById('addBreach').addEventListener('click', ()=>{
+    if (!selectedBody) return;
+    // Create a breach at a random edge direction based on selection
+    const side = Math.floor(rand(0,4));
+    let lx=0, ly=0, dx=0, dy=0;
+    if (side===0){ lx = selectedBody.w/2; ly = rand(-selectedBody.h/3, selectedBody.h/3); dx=1; dy=0; }
+    if (side===1){ lx = -selectedBody.w/2; ly = rand(-selectedBody.h/3, selectedBody.h/3); dx=-1; dy=0; }
+    if (side===2){ lx = rand(-selectedBody.w/3, selectedBody.w/3); ly = selectedBody.h/2; dx=0; dy=1; }
+    if (side===3){ lx = rand(-selectedBody.w/3, selectedBody.w/3); ly = -selectedBody.h/2; dx=0; dy=-1; }
+    selectedBody.breach = {localX: lx, localY: ly, dirX: dx, dirY: dy};
+    log(`🕳️ דליפה נוצרה ב־${selectedBody.name}. לחץ יירד וייווצר דחף.`);
+  });
 
-    els.metaResp.textContent = `נקודות: ${respPoints.length}  |  A≈${format(amp.value(),3)}`;
-  }
+  document.getElementById('toggleHatch').addEventListener('click', ()=>{
+    if (!selectedBody) return;
+    // Toggle hatch on any connector attached to selected; if multiple, toggles nearest
+    let best = null, bestD = 1e9;
+    for (const c of connectors){
+      if (c.broken) continue;
+      if (c.a===selectedBody || c.b===selectedBody){
+        // distance from mouse to mid of connector
+        const wa = c.a.localToWorld(c.aLocal.x, c.aLocal.y);
+        const wb = c.b.localToWorld(c.bLocal.x, c.bLocal.y);
+        const mx = (wa.x+wb.x)/2, my = (wa.y+wb.y)/2;
+        const d = Math.hypot(mouse.x-mx, mouse.y-my);
+        if (d < bestD){ bestD = d; best = c; }
+      }
+    }
+    if (!best){
+      log('ℹ️ אין מחבר פעיל ליד המודול הנבחר.');
+      return;
+    }
+    best.hatchOpen = !best.hatchOpen;
+    log(`${best.hatchOpen ? '🚪 נפתח' : '🔒 נסגר'} צוהר בין ${best.a.name} ↔ ${best.b.name}.`);
+  });
 
-  // ---------- Main loop ----------
-  let lastTs = null;
+  document.getElementById('repair').addEventListener('click', ()=>{
+    connectors.forEach(c=>c.repair());
+    log('🔧 תיקון: כל המחברים הוחזרו למצב תקין.');
+  });
 
-  function tick(ts) {
-    if (lastTs == null) lastTs = ts;
-    const dtReal = (ts - lastTs) / 1000;
-    lastTs = ts;
+  document.getElementById('reset').addEventListener('click', ()=>{
+    log('↩️ איפוס תרחיש.');
+    makeScenario();
+  });
 
-    if (!els.pause.checked) {
-      // We run several physics steps per frame for stability if needed
-      const dt = params.dt;
-      // Aim to simulate roughly real-time: use dtReal as budget
-      // but clamp so we don't jump too much on tab switches.
-      const budget = clamp(dtReal, 0, 0.05);
-      const steps = Math.max(1, Math.floor(budget / dt));
-      const stepsClamped = clamp(steps, 1, 20);
+  // ===== Simulation loop =====
+  let last = performance.now();
 
-      for (let i=0;i<stepsClamped;i++){
-        const out = stepRK4(t, x, v, dt, params);
-        t += dt;
-        x = out.x;
-        v = out.v;
-        a = out.a;
+  function step(dt){
+    const stiffness = +ui.stiffness.value;
+    const damping   = +ui.damping.value;
+    const breakF    = +ui.breakF.value;
+    const leakPower = +ui.leakPower.value;
+    const drag      = +ui.spaceDrag.value;
 
-        amp.push(x);
+    // 1) External "dragging" force (player)
+    if (mouse.dragging && dragBody){
+      // Pull a local point on the body toward mouse position (spring handle)
+      const wp = dragBody.localToWorld(mouse.dragOffsetX, mouse.dragOffsetY);
+      const dx = mouse.x - wp.x, dy = mouse.y - wp.y;
+      const kHandle = 1400; // strong
+      const fx = kHandle*dx - 35*dragBody.vx;
+      const fy = kHandle*dy - 35*dragBody.vy;
+      dragBody.applyForce(fx, fy, wp.x, wp.y);
+    }
 
-        xtBuf.push({ t, x });
-        if (xtBuf.length > maxXT) xtBuf.shift();
+    // 2) Leaks: pressure drops + thrust
+    for (const b of bodies){
+      if (b.breach){
+        // Pressure decay
+        b.pressure = clamp(b.pressure - (0.18 * dt), 0, 1);
 
-        phBuf.push({ x, v });
-        if (phBuf.length > maxPH) phBuf.shift();
+        // Apply thrust proportional to pressure and leakPower
+        const p = b.pressure; // remaining pressure
+        const local = b.breach;
+        const wpt = b.localToWorld(local.localX, local.localY);
 
-        // Sweep logic
-        if (sweep) {
-          // During discard, we don't measure amplitude
-          sweep.discardLeft -= dt;
-          if (sweep.discardLeft <= 0) {
-            sweep.holdLeft -= dt;
-            if (sweep.holdLeft <= 0) {
-              // Record amplitude at this omega
-              respPoints.push({ w: params.omega, A: amp.value() });
+        // Leak direction in world space (rotate local dir)
+        const c = Math.cos(b.angle), s = Math.sin(b.angle);
+        const dirx = c*local.dirX - s*local.dirY;
+        const diry = s*local.dirX + c*local.dirY;
 
-              // Advance omega
-              const nextW = sweep.w + sweep.wStep;
-              const done = (sweep.dir > 0) ? (nextW > sweep.wEnd) : (nextW < sweep.wEnd);
+        // Thrust is opposite to leak direction
+        const thrust = leakPower * (0.6 + 1.4*p) * 220; // tuned
+        b.applyForce(-dirx*thrust, -diry*thrust, wpt.x, wpt.y);
 
-              if (done) {
-                sweep = null;
-              } else {
-                sweep.w = nextW;
-                params.omega = nextW;
-                els.omega.value = String(nextW);
-                // reset measurement windows for next omega
-                amp.clear();
-                sweep.holdLeft = sweep.holdTime;
-                sweep.discardLeft = sweep.discardTime;
-                syncLabels();
-              }
-            }
-          }
+        // If pressure fully gone, breach becomes "silent"
+        if (b.pressure <= 0.001){
+          // keep breach but no more thrust; story: module is vacuum
         }
       }
     }
 
-    // Draw
-    drawSim();
-    drawPhase();
-    drawResponse();
+    // 3) Connectors
+    for (const c of connectors){
+      c.step(dt, stiffness, damping, breakF);
+    }
 
-    requestAnimationFrame(tick);
+    // 4) Integrate bodies
+    for (const b of bodies){
+      b.integrate(dt, drag);
+
+      // Keep inside bounds with soft walls (to avoid losing bodies off-screen)
+      // This is a "simulation convenience", like invisible tracking drones.
+      const pad = 70;
+      const kWall = 2200;
+      if (b.x < pad) b.applyForce(kWall*(pad-b.x), 0, b.x, b.y);
+      if (b.x > W-pad) b.applyForce(-kWall*(b.x-(W-pad)), 0, b.x, b.y);
+      if (b.y < pad) b.applyForce(0, kWall*(pad-b.y), b.x, b.y);
+      if (b.y > H-pad) b.applyForce(0, -kWall*(b.y-(H-pad)), b.x, b.y);
+    }
   }
 
-  // Rounded rect polyfill for older browsers
-  if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
-      r = Math.min(r, w/2, h/2);
-      this.beginPath();
-      this.moveTo(x+r, y);
-      this.arcTo(x+w, y,   x+w, y+h, r);
-      this.arcTo(x+w, y+h, x,   y+h, r);
-      this.arcTo(x,   y+h, x,   y,   r);
-      this.arcTo(x,   y,   x+w, y,   r);
-      this.closePath();
-      return this;
-    };
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Stars
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    for (let i=0; i<90; i++){
+      const x = (i*97)%W;
+      const y = (i*193)%H;
+      ctx.fillRect(x, y, 1, 1);
+    }
+    ctx.restore();
+
+    // Connectors
+    for (const c of connectors){
+      const wa = c.a.localToWorld(c.aLocal.x, c.aLocal.y);
+      const wb = c.b.localToWorld(c.bLocal.x, c.bLocal.y);
+
+      ctx.beginPath();
+      ctx.moveTo(wa.x, wa.y);
+      ctx.lineTo(wb.x, wb.y);
+
+      if (c.broken){
+        ctx.strokeStyle = 'rgba(255,80,80,0.8)';
+        ctx.setLineDash([8,6]);
+        ctx.lineWidth = 2.5;
+      } else {
+        ctx.setLineDash([]);
+        ctx.lineWidth = c.hatchOpen ? 3 : 2;
+        ctx.strokeStyle = c.hatchOpen ? 'rgba(120,200,255,0.85)' : 'rgba(220,220,220,0.55)';
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Hatch indicator at midpoint
+      const mx = (wa.x+wb.x)/2, my = (wa.y+wb.y)/2;
+      ctx.beginPath();
+      ctx.arc(mx,my, 5, 0, Math.PI*2);
+      ctx.fillStyle = c.broken ? 'rgba(255,80,80,0.9)' : (c.hatchOpen ? 'rgba(120,200,255,0.9)' : 'rgba(220,220,220,0.65)');
+      ctx.fill();
+    }
+
+    // Bodies
+    for (const b of bodies){
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(b.angle);
+
+      // Pressure color cue
+      const p = b.pressure;
+      const base = 40 + Math.floor(p*120);
+
+      // Selected highlight
+      if (b === selectedBody){
+        ctx.shadowColor = 'rgba(130,220,255,0.7)';
+        ctx.shadowBlur = 18;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      // Module
+      ctx.fillStyle = `rgba(${base}, ${base+30}, ${base+60}, 0.85)`;
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = 2;
+
+      roundRect(ctx, -b.w/2, -b.h/2, b.w, b.h, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      // Small details
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.fillRect(-b.w/2 + 10, -8, b.w - 20, 16);
+
+      // Name & pressure
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${b.name}  |  לחץ ${(b.pressure*100).toFixed(0)}%`, 0, 5);
+
+      // Breach visualization
+      if (b.breach){
+        const br = b.breach;
+        const bx = br.localX, by = br.localY;
+        ctx.beginPath();
+        ctx.arc(bx, by, 6, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,170,60,0.95)';
+        ctx.fill();
+
+        // jet plume direction
+        const jx = br.dirX * 26, jy = br.dirY * 26;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + jx, by + jy);
+        ctx.strokeStyle = 'rgba(255,170,60,0.75)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    // HUD
+    if (selectedBody){
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(12, 12, 420, 78);
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`נבחר: ${selectedBody.name}`, 22, 36);
+      ctx.fillText(`מהירות: ${Math.hypot(selectedBody.vx, selectedBody.vy).toFixed(1)}   |   סבסוב: ${selectedBody.omega.toFixed(2)}`, 22, 58);
+      ctx.fillText(`לחץ: ${(selectedBody.pressure*100).toFixed(0)}%   |   דליפה: ${selectedBody.breach ? 'כן' : 'לא'}`, 22, 80);
+      ctx.restore();
+    }
   }
 
-  // Init
-  resetState();
-  requestAnimationFrame(tick);
+  function roundRect(ctx,x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+
+  function frame(t){
+    const dtRaw = (t - last) / 1000;
+    last = t;
+
+    // Fixed-step substepping for stability
+    const dt = clamp(dtRaw, 0, 0.05);
+    const sub = 3;
+    const h = dt/sub;
+    for (let i=0; i<sub; i++) step(h);
+
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // Start
+  log('✅ סימולציה מוכנה. בחרו מודול ונסו ליצור דליפה/לשנות צוהרים. הסיפור יופיע דרך הפיזיקה.');
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
